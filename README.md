@@ -23,7 +23,8 @@ kartu stok, stock opname, penanganan selisih, barang rusak/usang, rekonsiliasi, 
 
 ## Mulai dari sini
 
-1. **Panduan langkah demi langkah:** [`docs/PANDUAN_SETUP.md`](docs/PANDUAN_SETUP.md)
+1. **Panduan untuk non-programmer (tanpa terminal):** dokumen "Panduan Pemasangan SIPP — Fase 2" di Claude; file SQL siap tempel ada di [`docs/sql/`](docs/sql/)
+   - Alternatif teknis lewat terminal: [`docs/PANDUAN_SETUP.md`](docs/PANDUAN_SETUP.md)
 2. Rancangan lengkap: [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
 3. Dokumentasi database: [`docs/DATABASE.md`](docs/DATABASE.md)
 4. Laporan fase terakhir: [`docs/LAPORAN_FASE_2.md`](docs/LAPORAN_FASE_2.md)

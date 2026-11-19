@@ -1,4 +1,6 @@
-# Panduan Setup SIPP (Fase 2)
+# Panduan Setup SIPP (Fase 2) — Versi Teknis (Terminal)
+
+> Untuk non-programmer, gunakan panduan tanpa terminal (GitHub Desktop + SQL Editor) dengan file di `docs/sql/`.
 
 Panduan ini ditulis untuk pengguna yang **bukan programmer**. Ikuti berurutan. Setiap langkah menjelaskan
 **apa** yang dilakukan dan **mengapa**.
