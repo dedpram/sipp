@@ -1,0 +1,61 @@
+# Deployment ke GitHub Pages.
+# SENGAJA hanya dapat dijalankan MANUAL (tab Actions > "Deploy ke GitHub Pages" > Run workflow)
+# sesuai ketentuan: tidak ada deployment sebelum disetujui.
+name: Deploy ke GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      konfirmasi:
+        description: 'Ketik DEPLOY untuk melanjutkan'
+        required: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ github.event.inputs.konfirmasi == 'DEPLOY' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build produksi
+        env:
+          # Diisi di Settings > Secrets and variables > Actions > tab "Variables"
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_APP_BASE_PATH: /${{ github.event.repository.name }}/
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "Variabel VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY belum diatur di GitHub."; exit 1
+          fi
+          npx vite build
+      - run: npm run check:bundle
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

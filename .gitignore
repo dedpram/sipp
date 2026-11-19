@@ -1,0 +1,23 @@
+# Dependensi & hasil build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# RAHASIA — jangan pernah di-commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+supabase/.env
+supabase/.temp/
+supabase/.branches/
+
+# Editor & OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log

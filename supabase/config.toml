@@ -1,0 +1,15 @@
+# Konfigurasi minimal Supabase CLI untuk proyek SIPP.
+# Dipakai oleh: npx supabase link / db push / functions deploy
+project_id = "sipp"
+
+[api]
+# Hanya schema public yang diekspos ke REST API. Schema `private` sengaja TIDAK diekspos.
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+major_version = 17
+
+[functions.admin-users]
+# Token pengguna diverifikasi di gateway Supabase sebelum fungsi dijalankan.
+verify_jwt = true

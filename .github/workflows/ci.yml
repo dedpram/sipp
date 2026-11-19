@@ -1,0 +1,62 @@
+# Pemeriksaan otomatis setiap kali kode dikirim ke GitHub.
+# Tidak melakukan deployment.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend (type-check, test, build, cek rahasia)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Instal dependensi
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Pemeriksaan TypeScript
+        run: npm run typecheck
+      - name: Unit test
+        run: npm test
+      - name: Build (dengan konfigurasi contoh)
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          VITE_APP_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npx vite build
+      - name: Pastikan tidak ada kunci rahasia di bundle
+        run: npm run check:bundle
+
+  database:
+    name: Database (migration + uji RLS)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instal klien PostgreSQL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Jalankan migration & uji RLS
+        run: bash scripts/test-db.sh
