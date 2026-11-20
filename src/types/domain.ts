@@ -67,6 +67,15 @@ export interface DashboardOverview {
   active_units: number;
   active_items: number;
   proposed_items?: number;
+  stock?: {
+    total_value: number;
+    items_in_stock: number;
+    below_min: number;
+    above_max: number;
+    expiring: number;
+    receipts_month: number;
+    receipts_open: number;
+  };
   mfa_required: boolean;
   mfa_satisfied: boolean;
   generated_at: string;

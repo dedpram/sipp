@@ -42,7 +42,7 @@ const TABS: { key: TabKey; label: string; roles: readonly RoleCode[] | 'all' }[]
   { key: 'satuan', label: 'Satuan', roles: 'all' },
   { key: 'gudang', label: 'Gudang', roles: 'all' },
   { key: 'lokasi', label: 'Lokasi Penyimpanan', roles: 'all' },
-  { key: 'penyedia', label: 'Penyedia', roles: ['SA', 'KPA', 'PWS', 'PPK', 'PPB', 'PGB', 'AKT', 'AUD'] },
+  { key: 'penyedia', label: 'Penyedia', roles: ['SA', 'PWS', 'PPK', 'PPB', 'PGB', 'AUD'] },
   { key: 'unit', label: 'Unit Kerja', roles: 'all' },
 ];
 
@@ -80,7 +80,7 @@ export default function MasterDataPage() {
   const units = useMasterRows<ItemUnit>('item_units', 'id, code, name, is_active', 'name');
   const warehouses = useMasterRows<Warehouse>('warehouses', 'id, code, name, address, pic_user_id, is_active', 'code');
   const orgUnits = useMasterRows<OrganizationalUnit>('organizational_units', 'id, code, name, parent_id, head_user_id, is_active', 'name');
-  const profiles = useProfilesLookup(hasRole('SA', 'KPA', 'PWS', 'AUD', 'PGB', 'AKT'));
+  const profiles = useProfilesLookup(hasRole('SA', 'PWS', 'AUD', 'PGB'));
 
   const maps = useMemo(() => {
     const byId = <T extends { id: string }>(list: T[] | undefined) => new Map((list ?? []).map((x) => [x.id, x]));

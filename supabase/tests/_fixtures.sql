@@ -36,13 +36,12 @@ insert into public.user_roles (user_id, role_id, unit_id)
 select p.id, r.id, u.id
 from (values
   ('sa2@test.id',      'SA',  null),
-  ('kpa@test.id',      'KPA', null),
   ('pws@test.id',      'PWS', null),
   ('ppk@test.id',      'PPK', null),
   ('ppb@test.id',      'PPB', null),
   ('pgb@test.id',      'PGB', null),
-  ('akt@test.id',      'AKT', null),
   ('tso@test.id',      'TSO', null),
+  ('akt@test.id',      'AKT', null),
   ('aud@test.id',      'AUD', null),
   ('ats.umum@test.id', 'ATS', 'UMUM'),
   ('ats.umum@test.id', 'PGW', 'UMUM'),

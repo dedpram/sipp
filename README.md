@@ -15,8 +15,9 @@ kartu stok, stock opname, penanganan selisih, barang rusak/usang, rekonsiliasi, 
 |---|---|---|
 | 1 | Analisis & perancangan (`docs/PROJECT_SPEC.md`) | ✅ Disetujui |
 | 2 | Fondasi: login, role, RLS, audit trail, layout, dashboard awal, pengguna | ✅ Diuji & disetujui |
-| 3 | Master data, pengaturan, verifikasi dua langkah | ✅ Selesai — menunggu uji & persetujuan |
-| 4 | Transaksi | ⏳ |
+| 3 | Master data, pengaturan, verifikasi dua langkah | ✅ Diuji & disetujui |
+| 4A | Penerimaan, saldo awal, penyimpanan, kartu stok | ✅ Selesai — menunggu uji & persetujuan |
+| 4B | Permintaan, persetujuan, pengeluaran | ⏳ |
 | 5 | Pengendalian | ⏳ |
 | 6 | Pelaporan | ⏳ |
 | 7 | Testing & deployment | ⏳ |
@@ -27,7 +28,7 @@ kartu stok, stock opname, penanganan selisih, barang rusak/usang, rekonsiliasi, 
    - Alternatif teknis lewat terminal: [`docs/PANDUAN_SETUP.md`](docs/PANDUAN_SETUP.md)
 2. Rancangan lengkap: [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
 3. Dokumentasi database: [`docs/DATABASE.md`](docs/DATABASE.md)
-4. Laporan fase terakhir: [`docs/LAPORAN_FASE_3.md`](docs/LAPORAN_FASE_3.md)
+4. Laporan fase terakhir: [`docs/LAPORAN_FASE_4A.md`](docs/LAPORAN_FASE_4A.md)
 
 ## Perintah penting
 

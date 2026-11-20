@@ -19,13 +19,15 @@ export async function fetchUsersBundle(): Promise<{ users: UserRow[]; roles: Rol
       .from('profiles')
       .select('id, nip, full_name, email, position_title, primary_unit_id, phone, is_active, last_login_at, created_at')
       .order('full_name'),
-    supabase.from('roles').select('id, code, name, description, sort_order').order('sort_order'),
+    supabase.from('roles').select('id, code, name, description, sort_order, is_active').order('sort_order'),
     supabase.from('organizational_units').select('id, code, name, parent_id, head_user_id, is_active').order('name'),
     supabase.from('user_roles').select('id, user_id, role_id, unit_id, valid_from, valid_until, assignment_ref, is_active'),
   ]);
   for (const r of [profilesRes, rolesRes, unitsRes, userRolesRes]) if (r.error) throw r.error;
 
-  const roles = (rolesRes.data ?? []) as Role[];
+  const allRoles = (rolesRes.data ?? []) as (Role & { is_active: boolean })[];
+  // Role yang sudah tidak digunakan (mis. KPA) tidak ditawarkan maupun ditampilkan.
+  const roles = allRoles.filter((r) => r.is_active);
   const units = (unitsRes.data ?? []) as OrganizationalUnit[];
   const roleById = new Map(roles.map((r) => [r.id, r]));
   const unitById = new Map(units.map((u) => [u.id, u]));

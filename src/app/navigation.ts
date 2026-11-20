@@ -39,7 +39,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Master Data',
     path: '/master-data',
     icon: Database,
-    roles: ['SA', 'KPA', 'PWS', 'PPK', 'PPB', 'PGB', 'AKT', 'TSO', 'AUD'],
+    roles: ['SA', 'PWS', 'PPK', 'PPB', 'PGB', 'TSO', 'AUD'],
     phase: 3,
   },
   {
@@ -47,7 +47,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Penerimaan',
     path: '/penerimaan',
     icon: ArrowDownToLine,
-    roles: ['PGB', 'PPB', 'PPK', 'KPA', 'PWS', 'AKT', 'AUD'],
+    roles: ['PGB', 'PPB', 'PPK', 'PWS', 'AUD'],
     phase: 4,
   },
   {
@@ -55,7 +55,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Penyimpanan',
     path: '/penyimpanan',
     icon: Warehouse,
-    roles: ['PGB', 'PPB', 'PPK', 'KPA', 'PWS', 'AKT', 'TSO', 'AUD'],
+    roles: ['PGB', 'PPB', 'PPK', 'PWS', 'TSO', 'AUD'],
     phase: 4,
   },
   {
@@ -63,7 +63,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Permintaan Barang',
     path: '/permintaan',
     icon: ClipboardList,
-    roles: ['PGW', 'ATS', 'PGB', 'KPA', 'PWS', 'AKT', 'AUD'],
+    roles: ['PGW', 'ATS', 'PGB', 'PWS', 'AUD'],
     phase: 4,
   },
   {
@@ -71,7 +71,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Pengeluaran',
     path: '/pengeluaran',
     icon: ArrowUpFromLine,
-    roles: ['PGB', 'KPA', 'PWS', 'AKT', 'AUD'],
+    roles: ['PGB', 'PWS', 'AUD'],
     phase: 4,
   },
   {
@@ -79,7 +79,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Kartu Stok',
     path: '/kartu-stok',
     icon: BookOpenText,
-    roles: ['PGB', 'ATS', 'KPA', 'PWS', 'AKT', 'TSO', 'AUD'],
+    roles: ['PGB', 'ATS', 'PWS', 'TSO', 'AUD'],
     phase: 4,
   },
   {
@@ -87,7 +87,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Stock Opname',
     path: '/stock-opname',
     icon: ClipboardCheck,
-    roles: ['PWS', 'TSO', 'PGB', 'KPA', 'AKT', 'AUD'],
+    roles: ['PWS', 'TSO', 'PGB', 'AUD'],
     phase: 5,
   },
   {
@@ -95,7 +95,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Penanganan Selisih',
     path: '/selisih',
     icon: TriangleAlert,
-    roles: ['KPA', 'PWS', 'PGB', 'TSO', 'AKT', 'AUD'],
+    roles: ['PWS', 'PGB', 'TSO', 'AUD'],
     phase: 5,
   },
   {
@@ -103,7 +103,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Barang Rusak/Usang',
     path: '/barang-rusak',
     icon: PackageX,
-    roles: ['PGB', 'KPA', 'PWS', 'AKT', 'TSO', 'AUD'],
+    roles: ['PGB', 'PWS', 'TSO', 'AUD'],
     phase: 5,
   },
   {
@@ -111,7 +111,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Rekonsiliasi',
     path: '/rekonsiliasi',
     icon: Scale,
-    roles: ['AKT', 'PGB', 'KPA', 'PWS', 'AUD'],
+    // Petugas Akuntansi hanya berperan di modul ini (menyusun rekonsiliasi).
+    roles: ['AKT', 'PGB', 'PWS', 'AUD'],
     phase: 5,
   },
   { key: 'reports', label: 'Laporan', path: '/laporan', icon: FileBarChart, roles: ALL_EXCEPT_NONE, phase: 6 },
@@ -120,7 +121,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Pengawasan',
     path: '/pengawasan',
     icon: SearchCheck,
-    roles: ['KPA', 'PWS', 'AUD'],
+    roles: ['PWS', 'AUD'],
     phase: 5,
   },
   {
@@ -128,7 +129,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Pengguna dan Role',
     path: '/pengguna',
     icon: Users,
-    roles: ['SA', 'KPA', 'AUD'],
+    roles: ['SA', 'AUD'],
     phase: 2,
   },
   {
@@ -136,7 +137,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Pengaturan',
     path: '/pengaturan',
     icon: Settings,
-    roles: ['SA', 'KPA', 'PWS', 'AUD'],
+    roles: ['SA', 'PWS', 'AUD'],
     phase: 3,
   },
 ];

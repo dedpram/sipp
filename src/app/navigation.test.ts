@@ -29,6 +29,10 @@ describe('menu sesuai role', () => {
     expect(k).toContain('users');
   });
 
+  it('Petugas Akuntansi hanya melihat Dashboard, Rekonsiliasi, dan Laporan', () => {
+    expect(keys(['AKT'])).toEqual(['dashboard', 'reconciliation', 'reports']);
+  });
+
   it('gabungan role menghasilkan gabungan menu tanpa duplikasi', () => {
     const k = keys(['ATS', 'PGW']);
     expect(new Set(k).size).toBe(k.length);

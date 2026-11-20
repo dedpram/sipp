@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toUserMessage } from '@/lib/errors';
-import { formatDateTime, formatNumber } from '@/lib/format';
+import { formatDateTime, formatNumber, formatRupiah } from '@/lib/format';
 import { ROLE_LABELS } from '@/lib/roles';
 import type { DashboardOverview } from '@/types/domain';
 import { PageHeader } from '@/components/layout/AppShell';
@@ -108,24 +108,23 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <Card title="Indikator persediaan">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[
-                { icon: PackageSearch, label: 'Kuantitas persediaan' },
-                { icon: Coins, label: 'Nilai persediaan (Rp)' },
-                { icon: ClipboardList, label: 'Permintaan menunggu persetujuan' },
-              ].map((x) => (
-                <div key={x.label} className="flex items-center gap-3 rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500">
-                  <x.icon className="h-5 w-5 text-slate-400" aria-hidden />
-                  <span>{x.label}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-slate-500">
-              Indikator ini akan terisi otomatis dari transaksi setelah modul Penerimaan, Permintaan, dan Pengeluaran
-              selesai (Fase 4). Grafik lengkap tersedia pada Fase 6.
-            </p>
-          </Card>
+          {query.data.stock && (
+            <Card title="Indikator persediaan">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard label="Nilai persediaan" value={<span className="text-lg">{formatRupiah(query.data.stock.total_value)}</span>} icon={Coins} tone="sky" hint={`${formatNumber(query.data.stock.items_in_stock)} jenis barang tersimpan`} />
+                <Link to="/penyimpanan" className="block">
+                  <StatCard label="Di bawah stok minimum" value={formatNumber(query.data.stock.below_min)} icon={PackageSearch} tone={query.data.stock.below_min ? 'amber' : 'slate'} hint={`${formatNumber(query.data.stock.above_max)} melebihi maksimum`} />
+                </Link>
+                <Link to="/penyimpanan?tab=kedaluwarsa" className="block">
+                  <StatCard label="Mendekati/lewat kedaluwarsa" value={formatNumber(query.data.stock.expiring)} icon={ClipboardList} tone={query.data.stock.expiring ? 'red' : 'slate'} />
+                </Link>
+                <Link to="/penerimaan" className="block">
+                  <StatCard label="Penerimaan sedang diproses" value={formatNumber(query.data.stock.receipts_open)} icon={Boxes} tone={query.data.stock.receipts_open ? 'amber' : 'slate'} hint={`${formatNumber(query.data.stock.receipts_month)} selesai disimpan bulan ini`} />
+                </Link>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">Permintaan dan pengeluaran barang tersedia setelah Fase 4B. Grafik lengkap pada Fase 6.</p>
+            </Card>
+          )}
 
           {query.data.recent_activity && (
             <Card title={<span className="inline-flex items-center gap-2"><Activity className="h-4 w-4" /> Aktivitas terbaru</span>}>

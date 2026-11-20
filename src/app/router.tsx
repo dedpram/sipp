@@ -11,6 +11,10 @@ const UsersPage = lazy(() => import('@/features/users/UsersPage'));
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage'));
 const MasterDataPage = lazy(() => import('@/features/master/MasterDataPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
+const ReceiptsPage = lazy(() => import('@/features/receipts/ReceiptsPage'));
+const ReceiptDetailPage = lazy(() => import('@/features/receipts/ReceiptDetailPage'));
+const StoragePage = lazy(() => import('@/features/storage/StoragePage'));
+const StockCardPage = lazy(() => import('@/features/stock-card/StockCardPage'));
 const ModulePlaceholderPage = lazy(() => import('@/features/placeholder/ModulePlaceholderPage'));
 
 const lazyPage = (node: ReactNode) => <Suspense fallback={<LoadingState />}>{node}</Suspense>;
@@ -21,6 +25,9 @@ const IMPLEMENTED: Record<string, () => ReactNode> = {
   users: () => <UsersPage />,
   master: () => <MasterDataPage />,
   settings: () => <SettingsPage />,
+  receipts: () => <ReceiptsPage />,
+  storage: () => <StoragePage />,
+  'stock-card': () => <StockCardPage />,
 };
 
 function routeFor(item: NavItem) {
@@ -45,6 +52,14 @@ export const router = createHashRouter([
     children: [
       ...NAV_ITEMS.map(routeFor),
       { path: 'profil', element: lazyPage(<ProfilePage />) },
+      {
+        path: 'penerimaan/:id',
+        element: lazyPage(
+          <RequireRole roles={NAV_ITEMS.find((n) => n.key === 'receipts')!.roles}>
+            <ReceiptDetailPage />
+          </RequireRole>,
+        ),
+      },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

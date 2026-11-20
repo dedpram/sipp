@@ -241,7 +241,7 @@ export function AssignRoleModal({
       }
     >
       <Alert tone="info">
-        Aturan pemisahan fungsi berlaku: Super Admin tidak merangkap KPA/PWS/PGB/ATS/AKT, Auditor tidak merangkap role
+        Aturan pemisahan fungsi berlaku: Super Admin tidak merangkap PWS/PGB/ATS/AKT, Auditor tidak merangkap role
         apa pun, dan Anda tidak dapat mengubah role Anda sendiri.
       </Alert>
       <Field label="Role" required error={errors.role_id?.message} htmlFor="ar-role">

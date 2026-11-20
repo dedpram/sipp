@@ -118,15 +118,15 @@ select tests.throws(
      select id, 'R. Arsip', 'A', '01', 'GDG1-A-01B' from public.warehouses where code = 'GDG1'$q$,
   'storage_locations_unique_position', 'Posisi rak yang sama tidak boleh didaftarkan dua kali');
 
-select tests.login_as('kpa@test.id');
-select tests.ok(tests.visible('select * from public.storage_locations') = 1, 'KPA dapat melihat lokasi');
+select tests.login_as('pws@test.id');
+select tests.ok(tests.visible('select * from public.storage_locations') = 1, 'Pejabat Pengawas dapat melihat lokasi');
 select tests.throws(
   $q$insert into public.warehouses (code, name) values ('GDG2', 'Gudang Dua')$q$,
-  'row-level security', 'KPA tidak dapat menambah gudang (bukan fungsinya)');
+  'row-level security', 'Pejabat Pengawas tidak dapat menambah gudang (bukan fungsinya)');
 
-select tests.login_as('akt@test.id');
+select tests.login_as('tso@test.id');
 select tests.ok(tests.visible($q$select * from public.storage_locations where code = 'GDG1-A-01'$q$) = 1,
-  'Petugas Akuntansi dapat melihat lokasi (kode tersimpan huruf besar)');
+  'Tim Stock Opname dapat melihat lokasi (kode tersimpan huruf besar)');
 
 -- 6. Penyedia -----------------------------------------------------------
 select tests.login_as('ppk@test.id');

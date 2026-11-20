@@ -1,6 +1,6 @@
 # Dokumentasi Database SIPP
 
-Status: **Fase 3 (fondasi + master data)**. Tabel transaksi ditambahkan pada fase berikutnya sesuai `PROJECT_SPEC.md` Bagian 5.
+Status: **Fase 4A (fondasi, master data, penerimaan & stok)**. Tabel transaksi ditambahkan pada fase berikutnya sesuai `PROJECT_SPEC.md` Bagian 5.
 
 ## 1. Schema
 
@@ -100,3 +100,27 @@ saat SA pertama kali mengaktifkan barang dan tidak dapat diisi dari aplikasi.
 Pengaturan `mfa_required_roles` di `app_settings` (default `["SA"]`).
 
 Hasil uji Fase 3: **126 pemeriksaan lolos** (Fase 2 + layanan + master data + MFA).
+
+## 9. Tambahan Fase 4A — Penerimaan & stok
+
+| Migration | Isi |
+|---|---|
+| `20261121000900_transaksi_tabel.sql` | `receipts`, `receipt_details`, `stock_batches`, `stock_balances`, `stock_movements`, `stock_transfers` (+details), `approvals`, `status_histories`, `attachments`; penomoran PNR otomatis; penjaga draf; riwayat status otomatis |
+| `20261121001000_transaksi_rpc.sql` | Ledger (`stock_in`, `consume_stock` FEFO/FIFO, `refresh_balance`), RPC alur penerimaan, perpindahan lokasi, kartu stok, verifikasi konsistensi, `v_stock_summary`, RLS, bucket Storage `documents` + policy, dashboard |
+
+**Alur penerimaan** (`rpc_receipt_*`, setelah migration 0011):
+
+| Langkah | Fungsi | Pelaku | Syarat utama |
+|---|---|---|---|
+| Catat & ajukan | insert + `submit` | Petugas Penerima Barang | Ada rincian; pembelian: penyedia + kontrak/pesanan; barang aktif |
+| Mulai periksa | `start_inspection` | PPK (pembelian) / Pejabat Pengawas (sumber lain), bukan pencatat | Sesuai `approval_settings` jenis `receipt` |
+| Periksa & sahkan | `record_inspection` (`lanjut`) | Pemeriksa | Diterima + ditolak = datang; kedaluwarsa wajib; dokumen wajib terunggah; status langsung **Disetujui** |
+| Catat ketidaksesuaian | `record_inspection` (`tindak_lanjut`) → `vendor_followup` | Pemeriksa → PPK/PWS/PPB | Diperiksa ulang setelah barang diganti |
+| Simpan ke gudang | `finalize` | Pengurus Barang | Lokasi aktif di gudang penerimaan; saldo bertambah; status langsung **Selesai** |
+| Batalkan | `cancel` | Pencatat | Sebelum disahkan; alasan wajib |
+
+Role **KPA** tidak aktif (`roles.is_active = false`, migration 0011): tidak dapat ditetapkan dan penugasan lama tidak memberi hak apa pun. **Petugas Akuntansi (AKT)** hanya untuk Rekonsiliasi (migration 0012): tidak membaca penerimaan, tetap membaca saldo & nilai persediaan.
+
+**Pengaman saldo:** tidak ada hak tulis aplikasi ke tabel stok; kunci per barang (`pg_advisory_xact_lock`) + `FOR UPDATE` pada batch; CHECK saldo ≥ 0; status diperiksa di bawah kunci baris (penyimpanan ganda ditolak); `rpc_verify_stock()` membandingkan mutasi = batch = saldo.
+
+Hasil uji: **205 pemeriksaan lolos**, termasuk uji dua perpindahan bersamaan, penghapusan role KPA, dan pembatasan Petugas Akuntansi.

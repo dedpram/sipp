@@ -41,4 +41,7 @@ for f in "$ROOT"/supabase/tests/rls/*.sql; do
   n=$(echo "$out" | grep -c 'ok - ' || true)
   total=$((total + n))
 done
+echo "--- uji transaksi bersamaan"
+bash "$ROOT/supabase/tests/concurrency/konkurensi.sh" "$DB_NAME" || { echo "PENGUJIAN GAGAL"; exit 1; }
+total=$((total + 1))
 echo "==> SEMUA LOLOS: $total pemeriksaan"

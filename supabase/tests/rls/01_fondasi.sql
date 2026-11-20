@@ -87,11 +87,11 @@ select tests.throws(
   $q$insert into public.user_roles (user_id, role_id) select auth.uid(), id from public.roles where code = 'KPA'$q$,
   'role anda sendiri', 'Pegawai tidak dapat memberi dirinya role');
 
-select tests.login_as('kpa@test.id');
+select tests.login_as('pws@test.id');
 select tests.throws(
   $q$insert into public.user_roles (user_id, role_id)
      select p.id, r.id from public.profiles p, public.roles r where p.email = 'tanpa.role@test.id' and r.code = 'PGB'$q$,
-  'row-level security', 'KPA tidak dapat menetapkan role (hanya SA)');
+  'row-level security', 'Pejabat Pengawas tidak dapat menetapkan role (hanya SA)');
 
 select tests.login_as('sa@test.id');
 select tests.throws(
@@ -99,8 +99,8 @@ select tests.throws(
   'role anda sendiri', 'SOD-9: Super Admin tidak dapat mengubah role sendiri');
 select tests.throws(
   $q$insert into public.user_roles (user_id, role_id)
-     select p.id, r.id from public.profiles p, public.roles r where p.email = 'sa2@test.id' and r.code = 'KPA'$q$,
-  'super admin tidak boleh merangkap', 'SOD-7: Super Admin tidak dapat merangkap KPA');
+     select p.id, r.id from public.profiles p, public.roles r where p.email = 'sa2@test.id' and r.code = 'PWS'$q$,
+  'super admin tidak boleh merangkap', 'SOD-7: Super Admin tidak dapat merangkap Pejabat Pengawas');
 select tests.throws(
   $q$insert into public.user_roles (user_id, role_id)
      select p.id, r.id from public.profiles p, public.roles r where p.email = 'pgb@test.id' and r.code = 'SA'$q$,
@@ -149,10 +149,10 @@ select tests.ok(
   not (public.rpc_dashboard_overview() ? 'active_users'),
   'Dashboard atasan tidak memuat statistik pengguna satker');
 
-select tests.login_as('kpa@test.id');
+select tests.login_as('pws@test.id');
 select tests.ok(
   public.rpc_dashboard_overview() ? 'active_users',
-  'Dashboard KPA memuat statistik pengguna');
+  'Dashboard Pejabat Pengawas memuat statistik pengguna');
 
 -- 8. Pengaturan ---------------------------------------------------------
 select tests.login_as('pgw.umum@test.id');

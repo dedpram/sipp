@@ -1,7 +1,6 @@
 /** Kode role sesuai tabel `roles` di database. */
 export const ROLE_CODES = [
   'SA',
-  'KPA',
   'PWS',
   'PPK',
   'PPB',
@@ -17,7 +16,6 @@ export type RoleCode = (typeof ROLE_CODES)[number];
 
 export const ROLE_LABELS: Record<RoleCode, string> = {
   SA: 'Super Admin',
-  KPA: 'Kepala Satuan Kerja / KPA',
   PWS: 'Pejabat Pengawas / Koordinator',
   PPK: 'Pejabat Pembuat Komitmen',
   PPB: 'Petugas Penerima Barang',

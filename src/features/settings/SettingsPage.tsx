@@ -22,7 +22,7 @@ import type { AppSetting, ApprovalSetting } from '@/types/domain';
 
 export const TRANSACTION_LABELS: Record<string, string> = {
   request: 'Permintaan barang',
-  receipt: 'Pengesahan penerimaan',
+  receipt: 'Pemeriksaan & pengesahan penerimaan',
   adjustment: 'Koreksi saldo',
   damaged: 'Reklasifikasi barang rusak/usang',
   write_off: 'Penghapusan persediaan',
@@ -258,7 +258,7 @@ const approvalSchema = z.object({
 type ApprovalForm = z.input<typeof approvalSchema>;
 type ApprovalValues = z.output<typeof approvalSchema>;
 
-const APPROVER_CHOICES: RoleCode[] = ['ATS', 'KPA', 'PWS', 'PPK'];
+const APPROVER_CHOICES: RoleCode[] = ['ATS', 'PWS', 'PPK'];
 
 function ApprovalModal({ row, onClose }: { row: ApprovalSetting | null; onClose: () => void }) {
   const toast = useToast();
