@@ -1,6 +1,6 @@
 # Dokumentasi Database SIPP
 
-Status: **Fase 2 (fondasi)**. Tabel transaksi ditambahkan pada fase berikutnya sesuai `PROJECT_SPEC.md` Bagian 5.
+Status: **Fase 3 (fondasi + master data)**. Tabel transaksi ditambahkan pada fase berikutnya sesuai `PROJECT_SPEC.md` Bagian 5.
 
 ## 1. Schema
 
@@ -76,3 +76,27 @@ USER_CREATE, USER_ACTIVATE, USER_DEACTIVATE, USER_PASSWORD_RESET (password tidak
 (`supabase/tests/_supabase_shim.sql`), menerapkan migration **dua kali** (uji idempotent), lalu menjalankan
 `supabase/tests/rls/*.sql`. Hasil Fase 2: **72 pemeriksaan lolos**, mencakup akses tiap role, lintas unit,
 pengguna nonaktif, anon, pemisahan fungsi, imutabilitas & deteksi manipulasi audit, serta hak eksekusi fungsi.
+
+## 8. Tambahan Fase 3
+
+| Migration | Isi |
+|---|---|
+| `20261120000600_hak_service_role.sql` | Hak minimum `service_role` (baca profil/role, ubah status aktif) untuk Edge Function pada proyek Supabase baru |
+| `20261121000700_master_data.sql` | `item_categories` (7 kategori awal), `item_units` (18 satuan awal), `items`, `warehouses`, `storage_locations`, `suppliers`; audit & normalisasi kode huruf besar |
+| `20261121000800_rls_master_mfa.sql` | Helper MFA, policy master data, penjaga usulan barang, `rpc_suggest_item_code`, dashboard & konteks pengguna diperbarui |
+
+| Tabel | Baca | Tambah/Ubah | Aktif/Nonaktif |
+|---|---|---|---|
+| `item_categories`, `item_units`, `organizational_units` | Semua pengguna aktif | SA (MFA) | SA (MFA) |
+| `items` | Semua pengguna aktif | SA (MFA), PGB (sebagai usulan) | SA (MFA) |
+| `warehouses`, `storage_locations` | SA, KPA, PWS, PPK, PPB, PGB, AKT, TSO, AUD | SA (MFA), PGB | SA (MFA), PGB |
+| `suppliers` | SA, KPA, PWS, PPK, PPB, PGB, AKT, AUD | SA (MFA), PPK | SA (MFA), PPK |
+
+Tidak ada hak DELETE pada tabel master; data dinonaktifkan. Kolom `items.activated_at/activated_by` diisi otomatis
+saat SA pertama kali mengaktifkan barang dan tidak dapat diisi dari aplikasi.
+
+**Verifikasi dua langkah.** `private.is_admin_verified()` = punya role SA aktif **dan** (MFA tidak diwajibkan
+**atau** token sesi `aal = aal2`). Dipakai di semua policy tulis SA, penjaga profil, dan Edge Function `admin-users` (v4).
+Pengaturan `mfa_required_roles` di `app_settings` (default `["SA"]`).
+
+Hasil uji Fase 3: **126 pemeriksaan lolos** (Fase 2 + layanan + master data + MFA).

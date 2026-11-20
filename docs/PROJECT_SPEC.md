@@ -1061,6 +1061,10 @@ Prioritas **Tinggi** memengaruhi rancangan database sehingga sebaiknya dijawab s
 | 19-11-2026 | Pemilik produk menyetujui rancangan v0.1 dengan instruksi "pakai usulan default". Seluruh kolom "Usulan default" K1–K23 berlaku sebagai keputusan. |
 | 19-11-2026 | K15 & K16 (kedaulatan data, paket Supabase) tetap menjadi **tindakan administratif** yang perlu dicek dengan unit TI sebelum produksi; tidak menghambat pengembangan. |
 
+| 20-11-2026 | Fase 2 diuji pengguna di Supabase sungguhan: 14/14 skenario sesuai. Perbaikan selama uji: Edge Function memverifikasi token sendiri (kompatibel kunci JWT baru), CORS menerima header tambahan supabase-js, hak minimum `service_role` untuk proyek Supabase baru. |
+| 21-11-2026 | Fase 3: barang baru yang ditambahkan Pengurus Barang berstatus **usulan (nonaktif)** sampai diaktifkan Super Admin (pemisahan fungsi). Penyedia dikelola SA dan PPK; gudang & lokasi oleh SA dan Pengurus Barang. |
+| 21-11-2026 | K21 diterapkan: tindakan Super Admin (pengguna, role, master, pengaturan) mewajibkan sesi terverifikasi dua langkah (aal2), ditegakkan di database dan Edge Function. Membaca data tetap boleh agar SA dapat mengaktifkan MFA. |
+
 Ringkasan keputusan utama: penilaian FIFO berbasis batch; FEFO untuk barang ber-kedaluwarsa dengan nilai mengikuti batch; persetujuan permintaan oleh Atasan Unit, lanjut ke pejabat bila di atas ambang nilai; pengesahan penerimaan oleh PPK (pembelian) atau KPA (lainnya); unit bertingkat; banyak gudang; akun dibuat lewat Edge Function; transaksi dibekukan pada lokasi yang sedang diopname; HashRouter; repository publik tanpa rahasia; MFA wajib untuk Super Admin; Super Admin dan Auditor tidak merangkap role lain.
 
 *Akhir dokumen.*

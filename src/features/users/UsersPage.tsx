@@ -19,8 +19,9 @@ import { AssignRoleModal, CreateUserModal, EditProfileModal, ResetPasswordModal 
 type Assignment = UserRow['assignments'][number];
 
 export default function UsersPage() {
-  const { hasRole, context } = useAuth();
-  const isSA = hasRole('SA');
+  const { context, adminReady } = useAuth();
+  // Tombol pengelolaan hanya untuk Super Admin yang sudah verifikasi dua langkah.
+  const isSA = adminReady;
   const toast = useToast();
   const qc = useQueryClient();
   const query = useQuery({ queryKey: ['users-bundle'], queryFn: fetchUsersBundle });

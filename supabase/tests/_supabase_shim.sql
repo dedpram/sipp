@@ -11,11 +11,12 @@ do $$ begin
 end $$;
 
 grant usage on schema public to anon, authenticated, service_role;
--- Meniru default privilege Supabase (semua tabel/fungsi baru otomatis
--- dapat diakses anon/authenticated). Migration SIPP wajib mencabutnya.
-alter default privileges in schema public grant all on tables    to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+-- Meniru kondisi terburuk: anon/authenticated otomatis mendapat hak atas
+-- tabel baru (proyek Supabase lama), sedangkan service_role TIDAK mendapat
+-- hak otomatis (proyek Supabase baru). Migration SIPP wajib menangani keduanya.
+alter default privileges in schema public grant all on tables    to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+alter default privileges in schema public grant all on functions to anon, authenticated;
 
 create schema if not exists auth;
 grant usage on schema auth to anon, authenticated, service_role;

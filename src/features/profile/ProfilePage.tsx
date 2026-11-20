@@ -14,6 +14,7 @@ import { passwordSchema } from '@/features/users/schema';
 import { supabase } from '@/lib/supabase';
 import { toUserMessage } from '@/lib/errors';
 import { ROLE_LABELS } from '@/lib/roles';
+import { MfaCard } from './MfaCard';
 
 const phoneSchema = z.object({
   phone: z.string().trim().max(20, 'Maksimal 20 karakter.').regex(/^[0-9+\-\s]*$/, 'Hanya angka, spasi, + atau -.'),
@@ -97,6 +98,8 @@ export default function ProfilePage() {
             <Button type="submit" icon={KeyRound} loading={pwForm.formState.isSubmitting}>Ganti Password</Button>
           </form>
         </Card>
+
+        <MfaCard />
       </div>
     </>
   );

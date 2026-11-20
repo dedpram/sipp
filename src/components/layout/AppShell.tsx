@@ -114,6 +114,23 @@ function UserMenu() {
   );
 }
 
+/** Pengingat bagi Super Admin yang belum memakai verifikasi dua langkah. */
+function MfaBanner() {
+  const { hasRole, adminReady } = useAuth();
+  if (!hasRole('SA') || adminReady) return null;
+  return (
+    <div className="mb-4 flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+      <span>
+        <b>Verifikasi dua langkah belum aktif.</b> Super Admin hanya dapat melihat data sampai verifikasi dua langkah
+        diaktifkan dan dipakai saat masuk.
+      </span>
+      <NavLink to={PROFILE_NAV.path} className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-center font-medium text-white hover:bg-amber-700">
+        Aktifkan sekarang
+      </NavLink>
+    </div>
+  );
+}
+
 export function AppShell() {
   const [drawer, setDrawer] = useState(false);
   const location = useLocation();
@@ -151,6 +168,7 @@ export function AppShell() {
           <UserMenu />
         </header>
         <main className="mx-auto max-w-7xl p-4 sm:p-6">
+          <MfaBanner />
           <Outlet />
         </main>
       </div>

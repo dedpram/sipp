@@ -17,14 +17,15 @@ begin
 end $$;
 
 -- Berpura-pura menjadi pengguna tertentu (seperti request dari Supabase API).
-create or replace function tests.login_as(p_email text)
+-- p_aal: 'aal2' = sudah verifikasi dua langkah (default), 'aal1' = hanya password.
+create or replace function tests.login_as(p_email text, p_aal text default 'aal2')
 returns void language plpgsql as $$
 declare v_id uuid;
 begin
   perform set_config('role', 'postgres', true);
   select id into v_id from auth.users where email = p_email;
   if v_id is null then raise exception 'Pengguna uji % tidak ada', p_email; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', v_id, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', v_id, 'role', 'authenticated', 'aal', p_aal)::text, true);
   perform set_config('role', 'authenticated', true);
 end $$;
 

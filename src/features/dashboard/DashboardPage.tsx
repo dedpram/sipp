@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import {
   Activity,
   Bell,
@@ -6,6 +7,8 @@ import {
   ClipboardList,
   Coins,
   PackageSearch,
+  PackagePlus,
+  Boxes,
   ShieldCheck,
   UserX,
   Users,
@@ -76,6 +79,18 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Notifikasi belum dibaca" value={formatNumber(query.data.unread_notifications)} icon={Bell} tone="sky" />
             <StatCard label="Unit kerja aktif" value={formatNumber(query.data.active_units)} icon={Building2} />
+            <StatCard label="Jenis barang aktif" value={formatNumber(query.data.active_items)} icon={Boxes} />
+            {query.data.proposed_items !== undefined && (
+              <Link to="/master-data?tab=barang" className="block">
+                <StatCard
+                  label="Usulan barang menunggu aktivasi"
+                  value={formatNumber(query.data.proposed_items)}
+                  icon={PackagePlus}
+                  tone={query.data.proposed_items > 0 ? 'amber' : 'slate'}
+                  hint="Diaktifkan oleh Super Admin"
+                />
+              </Link>
+            )}
             {query.data.active_users !== undefined && (
               <StatCard label="Pengguna aktif" value={formatNumber(query.data.active_users)} icon={Users} />
             )}
@@ -96,7 +111,7 @@ export default function DashboardPage() {
           <Card title="Indikator persediaan">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                { icon: PackageSearch, label: 'Jenis & kuantitas persediaan' },
+                { icon: PackageSearch, label: 'Kuantitas persediaan' },
                 { icon: Coins, label: 'Nilai persediaan (Rp)' },
                 { icon: ClipboardList, label: 'Permintaan menunggu persetujuan' },
               ].map((x) => (

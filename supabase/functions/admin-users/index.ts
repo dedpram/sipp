@@ -1,5 +1,5 @@
 // =====================================================================
-// SIPP — Edge Function `admin-users`  (versi 2)
+// SIPP — Edge Function `admin-users`  (versi 4)
 // Satu-satunya tempat kunci SERVICE ROLE / SECRET dipakai. Kunci ini
 // disediakan otomatis oleh Supabase sebagai variabel lingkungan fungsi
 // dan TIDAK pernah dikirim ke browser.
@@ -51,6 +51,17 @@ function serviceKey(): string | undefined {
   return undefined;
 }
 
+/** Membaca isi token yang SUDAH diverifikasi oleh auth.getUser(). */
+function tokenClaim(token: string, claim: string): unknown {
+  try {
+    const part = token.split('.')[1] ?? '';
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '='));
+    return (JSON.parse(json) as Record<string, unknown>)[claim];
+  } catch {
+    return undefined;
+  }
+}
+
 function todayJakarta(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 }
@@ -60,11 +71,16 @@ Deno.serve(async (req) => {
   const originOk = ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin.toLowerCase());
   // Origin pemanggil dipantulkan agar browser dapat membaca pesan error;
   // permintaan dari origin yang tidak diizinkan tetap DITOLAK di bawah.
+  // Header yang diminta browser dipantulkan kembali, karena versi baru
+  // supabase-js dapat mengirim header tambahan (mis. x-retry-count, traceparent).
+  const requestedHeaders = req.headers.get('Access-Control-Request-Headers');
   const cors = {
     'Access-Control-Allow-Origin': origin || '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers':
+      requestedHeaders || 'authorization, x-client-info, apikey, content-type, x-retry-count, x-region, traceparent, tracestate, baggage',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    Vary: 'Origin',
+    'Access-Control-Max-Age': '600',
+    Vary: 'Origin, Access-Control-Request-Headers',
   };
   const json = (status: number, body: unknown) =>
     new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -111,6 +127,16 @@ Deno.serve(async (req) => {
       (r: { valid_from: string; valid_until: string | null }) => r.valid_from <= today && (!r.valid_until || r.valid_until >= today),
     );
     if (!isSA) throw new HttpError(403, 'Anda tidak berwenang: hanya Super Admin yang dapat mengelola akun pengguna.');
+
+    // 3) Verifikasi dua langkah wajib bila diatur (pengaturan mfa_required_roles).
+    const { data: mfaRow } = await admin.from('app_settings').select('value').eq('key', 'mfa_required_roles').maybeSingle();
+    const mfaRequired = Array.isArray(mfaRow?.value) && (mfaRow.value as unknown[]).includes('SA');
+    if (mfaRequired && tokenClaim(token, 'aal') !== 'aal2') {
+      throw new HttpError(
+        403,
+        'Aktifkan verifikasi dua langkah di menu Profil Saya, lalu keluar dan masuk kembali dengan kode verifikasi.',
+      );
+    }
 
     const audit = async (action: string, recordId: string, oldData: unknown, newData: unknown) => {
       const { error } = await admin.rpc('rpc_service_audit', {

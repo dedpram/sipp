@@ -30,7 +30,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  if (status === 'signed_in') {
+  if (status === 'signed_in' || status === 'needs_mfa') {
     const from = (location.state as { from?: string } | null)?.from ?? '/';
     return <Navigate to={from} replace />;
   }

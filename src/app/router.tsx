@@ -9,6 +9,8 @@ const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
 const UsersPage = lazy(() => import('@/features/users/UsersPage'));
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage'));
+const MasterDataPage = lazy(() => import('@/features/master/MasterDataPage'));
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
 const ModulePlaceholderPage = lazy(() => import('@/features/placeholder/ModulePlaceholderPage'));
 
 const lazyPage = (node: ReactNode) => <Suspense fallback={<LoadingState />}>{node}</Suspense>;
@@ -17,6 +19,8 @@ const lazyPage = (node: ReactNode) => <Suspense fallback={<LoadingState />}>{nod
 const IMPLEMENTED: Record<string, () => ReactNode> = {
   dashboard: () => <DashboardPage />,
   users: () => <UsersPage />,
+  master: () => <MasterDataPage />,
+  settings: () => <SettingsPage />,
 };
 
 function routeFor(item: NavItem) {
