@@ -11,5 +11,5 @@ extra_search_path = ["public", "extensions"]
 major_version = 17
 
 [functions.admin-users]
-# Token pengguna diverifikasi di gateway Supabase sebelum fungsi dijalankan.
-verify_jwt = true
+# Token pengguna diverifikasi DI DALAM fungsi (kompatibel dengan kunci JWT baru Supabase).
+verify_jwt = false

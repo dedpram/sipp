@@ -5,6 +5,7 @@
  *   karena memerlukan kunci service role yang TIDAK boleh ada di browser.
  */
 import { supabase } from '@/lib/supabase';
+import { UserFacingError } from '@/lib/errors';
 import type { OrganizationalUnit, Profile, Role, UserRole } from '@/types/domain';
 
 export interface UserRow extends Profile {
@@ -120,20 +121,44 @@ type AdminAction =
 
 async function callAdmin<T = unknown>(payload: AdminAction): Promise<T> {
   const { data, error } = await supabase.functions.invoke('admin-users', { body: payload });
-  if (error) {
-    // Ambil pesan dari badan respons fungsi bila ada.
-    const ctx = (error as { context?: Response }).context;
-    if (ctx && typeof ctx.json === 'function') {
-      try {
-        const body = (await ctx.json()) as { error?: string };
-        if (body?.error) throw new Error(body.error);
-      } catch (inner) {
-        if (inner instanceof Error && inner.message) throw inner;
-      }
-    }
-    throw error;
+  if (!error) return data as T;
+
+  const name = (error as { name?: string }).name ?? '';
+  const ctx = (error as { context?: Response }).context;
+
+  // Fungsi tidak dapat dihubungi sama sekali (belum dipasang / diblokir browser).
+  if (name === 'FunctionsFetchError' || name === 'FunctionsRelayError') {
+    throw new UserFacingError(
+      'Fungsi pengelolaan akun (admin-users) tidak dapat dihubungi. Pastikan fungsi sudah terpasang dengan nama persis ' +
+        '"admin-users" dan secret SIPP_ALLOWED_ORIGINS berisi alamat aplikasi ini.',
+    );
   }
-  return data as T;
+
+  // Fungsi menjawab dengan status error: tampilkan pesannya apa adanya.
+  if (ctx && typeof ctx.text === 'function') {
+    let text = '';
+    try {
+      text = await ctx.text();
+    } catch {
+      /* abaikan */
+    }
+    let message = '';
+    try {
+      const body = JSON.parse(text) as { error?: string; message?: string; msg?: string };
+      message = body.error ?? body.message ?? body.msg ?? '';
+    } catch {
+      message = text;
+    }
+    const status = typeof ctx.status === 'number' ? ctx.status : 0;
+    if (/invalid jwt|jwt/i.test(message) && status === 401) {
+      throw new UserFacingError(
+        'Token login ditolak oleh pengaturan fungsi admin-users. Matikan opsi "Verify JWT" pada fungsi tersebut di Supabase, ' +
+          'lalu coba lagi.',
+      );
+    }
+    throw new UserFacingError(message ? message : `Fungsi admin-users gagal (status ${status || 'tidak diketahui'}).`);
+  }
+  throw new UserFacingError(`Fungsi admin-users gagal: ${error.message}`);
 }
 
 export const adminCreateUser = (input: Omit<Extract<AdminAction, { action: 'create_user' }>, 'action'>) =>

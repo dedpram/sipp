@@ -13,9 +13,18 @@ interface ErrorLike {
 
 const GENERIC = 'Terjadi kesalahan. Silakan coba lagi atau hubungi Super Admin.';
 
+/** Error yang pesannya sudah ditulis untuk pengguna dan ditampilkan apa adanya. */
+export class UserFacingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserFacingError';
+  }
+}
+
 export function toUserMessage(error: unknown): string {
   if (!error) return GENERIC;
   if (typeof error === 'string') return error;
+  if (error instanceof UserFacingError) return error.message;
 
   const e = error as ErrorLike;
   const msg = e.message ?? '';

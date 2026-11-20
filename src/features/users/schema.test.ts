@@ -1,5 +1,5 @@
 import { assignRoleSchema, createUserSchema } from './schema';
-import { toUserMessage } from '@/lib/errors';
+import { toUserMessage, UserFacingError } from '@/lib/errors';
 
 const validUser = {
   full_name: 'Budi Santoso',
@@ -63,6 +63,9 @@ describe('pesan error', () => {
   });
   it('menerjemahkan kegagalan jaringan', () => {
     expect(toUserMessage(new TypeError('Failed to fetch'))).toMatch(/koneksi internet/);
+  });
+  it('menampilkan pesan dari fungsi admin-users apa adanya', () => {
+    expect(toUserMessage(new UserFacingError('Akun tidak dapat dibuat: Database error'))).toBe('Akun tidak dapat dibuat: Database error');
   });
   it('tidak menampilkan pesan teknis berbahasa Inggris', () => {
     expect(toUserMessage({ message: 'syntax error at or near "x"', code: '42601' })).toMatch(/Terjadi kesalahan/);
