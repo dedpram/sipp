@@ -10,7 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/feedback/Stat
 import { useLookups } from '@/features/master/lookups';
 import { supabase } from '@/lib/supabase';
 import { toUserMessage } from '@/lib/errors';
-import { formatDate, formatNumber, formatRupiah } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber, formatRupiah } from '@/lib/format';
 
 interface CardRow {
   date: string;
@@ -188,6 +188,7 @@ export default function StockCardPage() {
             </table>
           </div>
           {query.data.rows.length === 0 && <p className="mt-3 text-center text-sm text-slate-500">Tidak ada mutasi pada periode ini.</p>}
+          <p className="print-only mt-3 text-right text-xs text-slate-500">Dicetak {formatDateTime(new Date())}</p>
         </Card>
       ) : null}
     </>
