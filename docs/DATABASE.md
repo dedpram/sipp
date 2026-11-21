@@ -112,9 +112,10 @@ Hasil uji Fase 3: **126 pemeriksaan lolos** (Fase 2 + layanan + master data + MF
 
 | Langkah | Fungsi | Pelaku | Syarat utama |
 |---|---|---|---|
-| Catat & ajukan | insert + `submit` | Petugas Penerima Barang | Ada rincian; pembelian: penyedia + kontrak/pesanan; barang aktif |
+| Catat & ajukan | insert + `submit` | Petugas Penerima Barang | Ada rincian; pembelian: penyedia + kontrak/pesanan; barang aktif; **tanggal kedaluwarsa diisi penerima** untuk barang ber-kedaluwarsa |
+| Perbaiki kedaluwarsa | `set_expiry` | Pencatat (Petugas Penerima Barang) | Hanya saat menunggu pemeriksaan / tidak sesuai / menunggu tindak lanjut |
 | Mulai periksa | `start_inspection` | PPK (pembelian) / Pejabat Pengawas (sumber lain), bukan pencatat | Sesuai `approval_settings` jenis `receipt` |
-| Periksa & sahkan | `record_inspection` (`lanjut`) | Pemeriksa | Diterima + ditolak = datang; kedaluwarsa wajib; dokumen wajib terunggah; status langsung **Disetujui** |
+| Periksa & sahkan | `record_inspection` (`lanjut`) | Pemeriksa | Diterima + ditolak = datang; tanggal kedaluwarsa hanya diperiksa (tidak dapat diubah); dokumen wajib terunggah; status langsung **Disetujui** |
 | Catat ketidaksesuaian | `record_inspection` (`tindak_lanjut`) → `vendor_followup` | Pemeriksa → PPK/PWS/PPB | Diperiksa ulang setelah barang diganti |
 | Simpan ke gudang | `finalize` | Pengurus Barang | Lokasi aktif di gudang penerimaan; saldo bertambah; status langsung **Selesai** |
 | Batalkan | `cancel` | Pencatat | Sebelum disahkan; alasan wajib |

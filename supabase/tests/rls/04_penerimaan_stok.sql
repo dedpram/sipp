@@ -67,6 +67,9 @@ select tests.ok(tests.affected($q$update public.receipts set notes = 'x' where i
 
 -- 2. Ajukan ----------------------------------------------------------------
 select tests.login_as('ppb@test.id');
+select tests.throws($q$select public.rpc_receipt_submit((select rcp from ids))$q$,
+  'wajib diisi tanggal kedaluwarsa', 'Barang ber-kedaluwarsa wajib diisi tanggalnya oleh Petugas Penerima sebelum diajukan');
+update public.receipt_details set expiry_date = date '2027-06-30' where id = (select det_b from ids);
 select public.rpc_receipt_submit((select rcp from ids));
 select tests.ok((select status = 'menunggu_pemeriksaan' and total_value = 5700000 from public.receipts where id = (select rcp from ids)),
   'Penerimaan diajukan; nilai sementara Rp5.700.000 dihitung otomatis');
@@ -83,13 +86,6 @@ select tests.throws($q$select public.rpc_receipt_start_inspection((select rcp fr
 -- 3. Pemeriksaan sekaligus pengesahan oleh PPK -------------------------
 select tests.login_as('ppk@test.id');
 select public.rpc_receipt_start_inspection((select rcp from ids));
-select tests.throws(
-  $q$select public.rpc_receipt_record_inspection((select rcp from ids),
-     jsonb_build_array(
-       jsonb_build_object('detail_id', (select det_a from ids), 'qty_received', 100, 'qty_accepted', 95, 'qty_rejected', 5, 'result', 'tidak_sesuai_jumlah'),
-       jsonb_build_object('detail_id', (select det_b from ids), 'qty_received', 20, 'qty_accepted', 20, 'qty_rejected', 0, 'result', 'sesuai')),
-     'Pemeriksaan', 'lanjut')$q$,
-  'tanggal kedaluwarsa', 'Barang ber-kedaluwarsa wajib diisi tanggal kedaluwarsa');
 select tests.throws(
   $q$select public.rpc_receipt_record_inspection((select rcp from ids),
      jsonb_build_array(jsonb_build_object('detail_id', (select det_a from ids), 'qty_received', 100, 'qty_accepted', 90, 'qty_rejected', 5, 'result', 'tidak_sesuai_jumlah')),
@@ -130,11 +126,13 @@ select tests.login_as('ppk@test.id');
 select public.rpc_receipt_record_inspection((select rcp from ids),
   jsonb_build_array(
     jsonb_build_object('detail_id', (select det_a from ids), 'qty_received', 100, 'qty_accepted', 95, 'qty_rejected', 5, 'result', 'tidak_sesuai_jumlah', 'notes', '5 rim basah'),
-    jsonb_build_object('detail_id', (select det_b from ids), 'qty_received', 20, 'qty_accepted', 20, 'qty_rejected', 0, 'result', 'sesuai', 'expiry_date', '2027-06-30')),
+    jsonb_build_object('detail_id', (select det_b from ids), 'qty_received', 20, 'qty_accepted', 20, 'qty_rejected', 0, 'result', 'sesuai', 'expiry_date', '2020-01-01')),
   'Diterima sebagian sesuai SPK', 'lanjut');
 select tests.ok((select status = 'disetujui' and approved_by = auth.uid() and inspector_id = auth.uid() and total_value = 5425000
                    from public.receipts where id = (select rcp from ids)),
   'PPK memeriksa sekaligus mengesahkan; nilai Rp5.425.000 (hanya barang diterima baik)');
+select tests.ok((select expiry_date = date '2027-06-30' from public.receipt_details where id = (select det_b from ids)),
+  'Pemeriksa tidak dapat mengubah tanggal kedaluwarsa isian Petugas Penerima');
 select tests.ok(tests.visible($q$select * from public.approvals where ref_id = (select rcp from ids) and decision = 'approved' and required_role_code = 'PPK'$q$) = 1,
   'Pengesahan tercatat beserta kewenangannya (PPK)');
 select tests.login_as('ppb@test.id');

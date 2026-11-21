@@ -42,6 +42,7 @@ import {
   finalizeReceipt,
   recordInspection,
   saveDetail,
+  setDetailExpiry,
   startInspection,
   submitReceipt,
   vendorFollowup,
@@ -90,6 +91,7 @@ export default function ReceiptDetailPage() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [editingHeader, setEditingHeader] = useState(false);
   const [line, setLine] = useState<{ detail: ReceiptDetail | null } | null>(null);
+  const [expiryFix, setExpiryFix] = useState<ReceiptDetail | null>(null);
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['receipt', id] });
@@ -125,11 +127,13 @@ export default function ReceiptDetailPage() {
   // Pemeriksa sekaligus pengesah: PPK (pembelian) / Pejabat Pengawas (sumber lain), bukan pencatat.
   const canInspect = !isCreator && hasRole(...(approverRoles.data ?? []).filter(isRoleCode));
   const canCancel = ['draft', 'menunggu_pemeriksaan', 'tidak_sesuai', 'menunggu_tindak_lanjut_penyedia'].includes(s) && isCreator;
+  // Tanggal kedaluwarsa diisi/diperbaiki Petugas Penerima Barang (pencatat), bukan pemeriksa.
+  const canFixExpiry = isCreator && hasRole('PPB') && ['menunggu_pemeriksaan', 'tidak_sesuai', 'menunggu_tindak_lanjut_penyedia'].includes(s);
   const canUpload = ATTACHABLE.includes(s) && hasRole('PPB', 'PPK', 'PWS');
   const currentStep = stepIndex(s);
 
   const dialogText: Record<Dialog['kind'], { title: string; message: string; confirm: string; reason?: string; tone?: 'danger' }> = {
-    submit: { title: 'Ajukan untuk pemeriksaan?', message: 'Setelah diajukan, data dan rincian barang tidak dapat diubah lagi. Petugas Penerima Barang akan memeriksa.', confirm: 'Ajukan' },
+    submit: { title: 'Ajukan untuk pemeriksaan?', message: `Setelah diajukan, data dan rincian barang tidak dapat diubah lagi. ${inspectorLabel(receipt.source_type)} akan memeriksa sekaligus mengesahkan.`, confirm: 'Ajukan' },
     start: { title: 'Mulai pemeriksaan?', message: 'Anda akan tercatat sebagai pemeriksa sekaligus pengesah penerimaan ini.', confirm: 'Mulai' },
     cancel: { title: 'Batalkan penerimaan?', message: 'Penerimaan dibatalkan dan tidak dapat diproses lagi. Riwayat tetap tersimpan.', confirm: 'Batalkan penerimaan', reason: 'Alasan pembatalan', tone: 'danger' },
     followup: { title: 'Teruskan tindak lanjut?', message: 'Penyedia/pemberi diminta mengganti atau melengkapi barang. Setelah barang datang, pemeriksa memeriksa ulang.', confirm: 'Teruskan', reason: 'Tindak lanjut yang diminta' },
@@ -225,7 +229,7 @@ export default function ReceiptDetailPage() {
             <DetailTable
               details={details}
               editable={canEditDraft}
-              status={s}
+              onFixExpiry={canFixExpiry ? setExpiryFix : undefined}
               onAdd={() => setLine({ detail: null })}
               onEdit={(d) => setLine({ detail: d })}
               onDeleted={refresh}
@@ -247,6 +251,7 @@ export default function ReceiptDetailPage() {
       </Card>
 
       <ReceiptHeaderModal open={editingHeader} receipt={receipt} onClose={() => setEditingHeader(false)} />
+      <ExpiryModal detail={expiryFix} onClose={() => setExpiryFix(null)} onSaved={refresh} />
       <LineModal target={line} receiptId={id} warehouseId={receipt.warehouse_id} nextLine={details.length + 1} onClose={() => setLine(null)} onSaved={refresh} />
       {dt && (
         <ConfirmDialog
@@ -269,14 +274,14 @@ export default function ReceiptDetailPage() {
 function DetailTable({
   details,
   editable,
-  status,
+  onFixExpiry,
   onAdd,
   onEdit,
   onDeleted,
 }: {
   details: ReceiptDetail[];
   editable: boolean;
-  status: ReceiptStatus;
+  onFixExpiry?: (d: ReceiptDetail) => void;
   onAdd: () => void;
   onEdit: (d: ReceiptDetail) => void;
   onDeleted: () => void;
@@ -329,6 +334,12 @@ function DetailTable({
                     <td className="px-3 py-2">
                       <p className="font-medium">{item?.name ?? '—'}</p>
                       <p className="font-mono text-xs text-slate-500">{item?.code}{d.expiry_date ? ` · kedaluwarsa ${formatDate(d.expiry_date)}` : ''}</p>
+                      {item?.has_expiry && !d.expiry_date && <p className="text-xs text-red-600">Tanggal kedaluwarsa belum diisi</p>}
+                      {item?.has_expiry && onFixExpiry && (
+                        <button type="button" onClick={() => onFixExpiry(d)} className="text-xs font-medium text-green-700 hover:underline">
+                          {d.expiry_date ? 'Perbaiki tanggal kedaluwarsa' : 'Isi tanggal kedaluwarsa'}
+                        </button>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{d.qty_ordered != null ? formatNumber(d.qty_ordered) : '—'}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{formatNumber(d.qty_received)} {lk.unitName(d.item_id)}</td>
@@ -363,7 +374,6 @@ function DetailTable({
           </table>
         </div>
       )}
-      {status === 'menunggu_pemeriksaan' && <Alert tone="info">Menunggu Petugas Penerima Barang memulai pemeriksaan.</Alert>}
     </div>
   );
 }
@@ -375,6 +385,7 @@ const lineSchema = z.object({
   qty_received: optQty('Jumlah datang').refine((v) => v !== null, 'Jumlah datang wajib diisi.'),
   unit_cost: qty('Harga satuan'),
   location_id: z.preprocess((v) => (v === '' ? null : v), z.string().nullable()),
+  expiry_date: z.preprocess((v) => (v === '' ? null : v), z.string().nullable()),
 });
 type LineIn = z.input<typeof lineSchema>;
 type LineOut = z.output<typeof lineSchema>;
@@ -406,12 +417,25 @@ function LineModal({
       qty_received: d ? String(d.qty_received) : '',
       unit_cost: d ? String(d.unit_cost) : '',
       location_id: d?.location_id ?? '',
+      expiry_date: d?.expiry_date ?? '',
     });
   }, [target, form]);
 
   const save = useMutation({
     mutationFn: (v: LineOut) =>
-      saveDetail(receiptId, { item_id: v.item_id, qty_ordered: v.qty_ordered, qty_received: v.qty_received ?? 0, unit_cost: v.unit_cost, location_id: v.location_id }, target?.detail?.id, nextLine),
+      saveDetail(
+        receiptId,
+        {
+          item_id: v.item_id,
+          qty_ordered: v.qty_ordered,
+          qty_received: v.qty_received ?? 0,
+          unit_cost: v.unit_cost,
+          location_id: v.location_id,
+          expiry_date: lk.itemMap.get(v.item_id)?.has_expiry ? v.expiry_date : null,
+        },
+        target?.detail?.id,
+        nextLine,
+      ),
     onSuccess: () => {
       toast.success('Barang disimpan.');
       onSaved();
@@ -421,6 +445,14 @@ function LineModal({
   });
 
   const e = form.formState.errors;
+  const selectedItem = lk.itemMap.get(String(form.watch('item_id') ?? ''));
+  const submit = form.handleSubmit((v) => {
+    if (lk.itemMap.get(v.item_id)?.has_expiry && !v.expiry_date) {
+      form.setError('expiry_date', { message: 'Barang ini wajib diisi tanggal kedaluwarsa (lihat kemasan).' });
+      return;
+    }
+    save.mutate(v);
+  });
   const activeItems = lk.items.filter((i) => i.is_active || i.id === target?.detail?.item_id);
   return (
     <Modal
@@ -430,7 +462,7 @@ function LineModal({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Batal</Button>
-          <Button onClick={form.handleSubmit((v) => save.mutate(v))} loading={save.isPending}>Simpan</Button>
+          <Button onClick={submit} loading={save.isPending}>Simpan</Button>
         </>
       }
     >
@@ -460,7 +492,48 @@ function LineModal({
             ))}
           </Select>
         </Field>
+        {selectedItem?.has_expiry && (
+          <Field label="Tanggal kedaluwarsa" required error={e.expiry_date?.message} hint="Sesuai yang tertera pada kemasan" htmlFor="ln-exp">
+            <Input id="ln-exp" type="date" {...form.register('expiry_date')} />
+          </Field>
+        )}
       </div>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+function ExpiryModal({ detail, onClose, onSaved }: { detail: ReceiptDetail | null; onClose: () => void; onSaved: () => void }) {
+  const lk = useLookups();
+  const toast = useToast();
+  const [value, setValue] = useState('');
+  useEffect(() => setValue(detail?.expiry_date ?? ''), [detail]);
+  const save = useMutation({
+    mutationFn: () => setDetailExpiry(detail!.id, value),
+    onSuccess: () => {
+      toast.success('Tanggal kedaluwarsa disimpan.');
+      onSaved();
+      onClose();
+    },
+    onError: (err) => toast.error(toUserMessage(err)),
+  });
+  const item = detail ? lk.itemMap.get(detail.item_id) : undefined;
+  return (
+    <Modal
+      open={Boolean(detail)}
+      onClose={onClose}
+      title="Tanggal kedaluwarsa"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>Batal</Button>
+          <Button onClick={() => save.mutate()} disabled={!value} loading={save.isPending}>Simpan</Button>
+        </>
+      }
+    >
+      <p className="mb-3 text-sm text-slate-600">{item?.code} — {item?.name}. Perubahan tercatat di riwayat dan akan diperiksa ulang oleh pemeriksa.</p>
+      <Field label="Tanggal kedaluwarsa" required hint="Sesuai yang tertera pada kemasan" htmlFor="fix-exp">
+        <Input id="fix-exp" type="date" value={value} onChange={(e) => setValue(e.target.value)} />
+      </Field>
     </Modal>
   );
 }
@@ -472,7 +545,6 @@ interface InspRow {
   qty_rejected: string;
   result: InspectionResult | '';
   notes: string;
-  expiry_date: string;
 }
 
 function InspectionForm({ receiptId, details, onDone, source }: { receiptId: string; details: ReceiptDetail[]; onDone: () => void; source: Receipt['source_type'] }) {
@@ -489,7 +561,6 @@ function InspectionForm({ receiptId, details, onDone, source }: { receiptId: str
         qty_rejected: String(d.inspection_result ? d.qty_rejected : 0),
         result: d.inspection_result ?? '',
         notes: d.inspection_notes ?? '',
-        expiry_date: d.expiry_date ?? '',
       };
     }
     setRows(init);
@@ -509,7 +580,6 @@ function InspectionForm({ receiptId, details, onDone, source }: { receiptId: str
           qty_rejected: num(r.qty_rejected),
           result: r.result,
           notes: r.notes || null,
-          expiry_date: r.expiry_date || null,
         };
       });
       return recordInspection(receiptId, lines, notes || null, decision);
@@ -527,7 +597,9 @@ function InspectionForm({ receiptId, details, onDone, source }: { receiptId: str
         Isi jumlah yang <b>diterima baik</b> dan yang <b>ditolak</b> untuk setiap barang (jumlahnya harus sama dengan jumlah
         yang datang). Sebelum mengesahkan, unggah{' '}
         <b>{source === 'saldo_awal' ? 'Berita Acara Saldo Awal' : source === 'pembelian' ? 'Berita Acara Pemeriksaan dan Surat Jalan/Faktur' : 'Berita Acara Pemeriksaan'}</b>{' '}
-        di tab Dokumen. Pemeriksaan Anda sekaligus menjadi pengesahan.
+        di tab Dokumen. Pemeriksaan Anda sekaligus menjadi pengesahan. Tanggal kedaluwarsa diisi Petugas Penerima Barang: bila
+        tidak cocok dengan kemasan, pilih hasil <b>Spesifikasi tidak sesuai</b>, tulis tanggal yang benar di Catatan, lalu klik{' '}
+        <b>Catat ketidaksesuaian</b>.
       </Alert>
       <div className="space-y-3">
         {details.map((d) => {
@@ -556,7 +628,13 @@ function InspectionForm({ receiptId, details, onDone, source }: { receiptId: str
                   </Select>
                 </Field>
                 {item?.has_expiry ? (
-                  <Field label="Kedaluwarsa"><Input type="date" value={r.expiry_date} onChange={(e) => set(d.id, { expiry_date: e.target.value })} /></Field>
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-slate-700">Kedaluwarsa</p>
+                    <p className={cn('rounded-lg border px-3 py-2 text-sm', d.expiry_date ? 'border-slate-200 bg-slate-50' : 'border-red-300 bg-red-50 text-red-700')}>
+                      {d.expiry_date ? formatDate(d.expiry_date) : 'Belum diisi'}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">Diisi penerima; cocokkan dengan kemasan</p>
+                  </div>
                 ) : (
                   <div />
                 )}

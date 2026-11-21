@@ -60,6 +60,8 @@ export interface DetailInput {
   qty_received: number;
   unit_cost: number;
   location_id: string | null;
+  /** Diisi Petugas Penerima Barang untuk barang ber-kedaluwarsa. */
+  expiry_date: string | null;
 }
 
 export async function saveDetail(receiptId: string, input: DetailInput, detailId?: string, lineNo?: number): Promise<void> {
@@ -94,13 +96,14 @@ export interface InspectionLine {
   qty_rejected: number;
   result: string;
   notes: string | null;
-  expiry_date: string | null;
 }
 export const recordInspection = (id: string, lines: InspectionLine[], notes: string | null, decision: 'lanjut' | 'tindak_lanjut') =>
   rpc('rpc_receipt_record_inspection', { p_id: id, p_lines: lines, p_notes: notes, p_decision: decision });
 export const vendorFollowup = (id: string, comment: string) => rpc('rpc_receipt_vendor_followup', { p_id: id, p_comment: comment });
 export const finalizeReceipt = (id: string, locations: Record<string, string>) =>
   rpc('rpc_receipt_finalize', { p_id: id, p_locations: locations });
+/** Perbaikan tanggal kedaluwarsa oleh Petugas Penerima Barang (pencatat) setelah diajukan. */
+export const setDetailExpiry = (detailId: string, expiry: string) => rpc('rpc_receipt_set_expiry', { p_detail_id: detailId, p_expiry: expiry });
 export const cancelReceipt = (id: string, reason: string) => rpc('rpc_receipt_cancel', { p_id: id, p_reason: reason });
 
 /** Role pemeriksa sekaligus pengesah penerimaan menurut pengaturan jenjang persetujuan. */
